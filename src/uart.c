@@ -19,7 +19,7 @@ void UART_init( uint32_t BaudRate){
         }
     };
     UartHandle2 = (UART_HandleTypeDef) {
-        .Instance = USART2,
+        .Instance = USART3,
         .Init = { .BaudRate = BaudRate,
             .WordLength = UART_WORDLENGTH_8B,
             .StopBits = UART_STOPBITS_1,
@@ -34,8 +34,12 @@ void UART_init( uint32_t BaudRate){
 
 
 void setTransfer(){
-    HAL_UART_Receive_IT(&UartHandle1, buffer1, 1);
+    uint8_t head = '>';
     HAL_UART_Receive_IT(&UartHandle2, buffer2, 1);
+    //HAL_UART_Transmit_IT(&UartHandle2,&head,1);
+    HAL_UART_Receive_IT(&UartHandle1, buffer1, 1);
+    //HAL_UART_Transmit_IT(&UartHandle1,&head,1);
+
 }
 
 /**
@@ -57,7 +61,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle){
     if(UartHandle->Instance == USART1){
         HAL_UART_Transmit_IT(&UartHandle2,buffer1,1);
         HAL_UART_Receive_IT(&UartHandle1, buffer1, 1);
-    }else if(UartHandle->Instance == USART2){
+    }else if(UartHandle->Instance == USART3){
         HAL_UART_Transmit_IT(&UartHandle1,buffer2,1);
         HAL_UART_Receive_IT(&UartHandle2, buffer2, 1);
     }
@@ -69,7 +73,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle){
     if(UartHandle->Instance == USART1){
         HAL_UART_Transmit_IT(&UartHandle2,&tmp,1);
         HAL_UART_Receive_IT(&UartHandle1,buffer1, 1);
-    }else if(UartHandle->Instance == USART2){
+    }else if(UartHandle->Instance == USART3){
         HAL_UART_Transmit_IT(&UartHandle1,&tmp,1);
         HAL_UART_Receive_IT(&UartHandle2,buffer2, 1);
     }
@@ -96,7 +100,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(USART2_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(USART2_IRQn);
     }else if(huart->Instance == USART3){// tx/rx: PB10/PB11, PC10/PC11, PD8/PD9
         __USART3_CLK_ENABLE();
@@ -105,7 +109,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(USART3_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(USART3_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(USART3_IRQn);
     }else if(huart->Instance == UART4){// tx/rx: PA0/PA1, PC10/PC11
         __UART4_CLK_ENABLE();
@@ -220,6 +224,7 @@ void USART2_IRQHandler(void){
     HAL_UART_IRQHandler(&UartHandle2);
 }
 void USART3_IRQHandler(void){
+    HAL_UART_IRQHandler(&UartHandle2);
 }
 void UART4_IRQHandler(void){
 }
