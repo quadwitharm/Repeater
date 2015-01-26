@@ -34,21 +34,8 @@ void UART_init( uint32_t BaudRate){
 
 
 void setTransfer(){
-    uint8_t head = '>';
     HAL_UART_Receive_IT(&UartHandle2, buffer2, 1);
-    //HAL_UART_Transmit_IT(&UartHandle2,&head,1);
     HAL_UART_Receive_IT(&UartHandle1, buffer1, 1);
-    //HAL_UART_Transmit_IT(&UartHandle1,&head,1);
-
-}
-
-/**
- * @brief  Tx Transfer completed callback
- * @param  UartHandle: UART handle
- * @retval None
- */
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle){
-    /* Set transmission flag: trasfer complete*/
 }
 
 /**
@@ -57,19 +44,20 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle){
  * @retval None
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle){
-    /* Set transmission flag: trasfer complete*/
     if(UartHandle->Instance == USART1){
-        HAL_UART_Transmit_IT(&UartHandle2,buffer1,1);
-        HAL_UART_Receive_IT(&UartHandle1, buffer1, 1);
+        HAL_UART_Transmit_IT(&UartHandle2,buffer1,1); /* Forward to UART3 */
+        HAL_UART_Receive_IT(&UartHandle1, buffer1, 1); /* Listen to next byte */
     }else if(UartHandle->Instance == USART3){
-        HAL_UART_Transmit_IT(&UartHandle1,buffer2,1);
-        HAL_UART_Receive_IT(&UartHandle2, buffer2, 1);
+        HAL_UART_Transmit_IT(&UartHandle1,buffer2,1); /* Forward to UART1 */
+        HAL_UART_Receive_IT(&UartHandle2, buffer2, 1); /* Listen to next byte */
     }
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle){
-    /* Set transmission flag: trasfer complete*/
+    /* Ignore error and just forward the data in DR,
+     * Error will detected by checksum */
     uint8_t tmp = UartHandle->Instance->DR;
+    /* Same as RxCpltCallBack */
     if(UartHandle->Instance == USART1){
         HAL_UART_Transmit_IT(&UartHandle2,&tmp,1);
         HAL_UART_Receive_IT(&UartHandle1,buffer1, 1);
@@ -80,7 +68,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle){
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart){
-    GPIO_InitTypeDef GPIO_InitStruct = {.Mode = GPIO_MODE_AF_PP, .Pull = GPIO_NOPULL, .Speed = GPIO_SPEED_FAST};
+    GPIO_InitTypeDef GPIO_InitStruct = {
+        .Mode = GPIO_MODE_AF_PP,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FAST,
+    };
     /*##-1- Enable peripherals and GPIO Clocks #################################*/
     /*##-2- Configure peripheral GPIO ##########################################*/
     /*##-3- Configure the NVIC for UART ########################################*/
@@ -118,7 +110,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(UART4_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(UART4_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(UART4_IRQn);
     }else if(huart->Instance == UART5){// tx/rx: PC12/PD2
         __UART5_CLK_ENABLE();
@@ -130,7 +122,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Pin = GPIO_PIN_2;
         HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(UART5_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(UART5_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(UART5_IRQn);
     }else if(huart->Instance == USART6){// tx/rx: PC6/PC7, PG14/PG9
         __USART6_CLK_ENABLE();
@@ -139,7 +131,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(USART6_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(USART6_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(USART6_IRQn);
     }else if(huart->Instance == UART7){// tx/rx: PE8/PE7, PF7/PF6
         __UART7_CLK_ENABLE();
@@ -148,7 +140,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_7;
         HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(UART7_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(UART7_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(UART7_IRQn);
     }else if(huart->Instance == UART8){// tx/rx: PE1/PE0
         __UART8_CLK_ENABLE();
@@ -157,7 +149,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
         GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_0;
         HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-        HAL_NVIC_SetPriority(UART8_IRQn, 0, 1);
+        HAL_NVIC_SetPriority(UART8_IRQn, 12, 0);
         HAL_NVIC_EnableIRQ(UART8_IRQn);
     }else return;
 }
@@ -221,7 +213,6 @@ void USART1_IRQHandler(void){
     HAL_UART_IRQHandler(&UartHandle1);
 }
 void USART2_IRQHandler(void){
-    HAL_UART_IRQHandler(&UartHandle2);
 }
 void USART3_IRQHandler(void){
     HAL_UART_IRQHandler(&UartHandle2);
