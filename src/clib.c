@@ -42,7 +42,7 @@ char kgetc(){
     return msg;
 }
 int kprintf(const char *format, ...){
-    char outbuf[128];
+    char outbuf[64];
     va_list args;
     va_start(args,format);
     int ret = vsnprintf(outbuf,128,format,args);

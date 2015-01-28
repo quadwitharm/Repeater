@@ -2,7 +2,7 @@
 #include "uart.h"
 #include "joystick.h"
 
-__IO uint16_t uhADCxConvertedValue = 0;
+uint16_t X = 0;
 
 int main(void){
     HAL_Init();
@@ -11,7 +11,15 @@ int main(void){
     JOYSTICK_init();
     setTransfer();
 
+    kputs("Uart Test\r\n");
+
+    HAL_ADC_Start(&AdcHandle);
     while(1){
-        HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*)&uhADCxConvertedValue, 1);
+        HAL_ADC_PollForConversion(&AdcHandle, 10000);
+        if(HAL_ADC_GetState(&AdcHandle) == HAL_ADC_STATE_EOC_REG)
+        {
+            X = HAL_ADC_GetValue(&AdcHandle);
+        }
+        kprintf("%d\r\n", X);
     }
 }

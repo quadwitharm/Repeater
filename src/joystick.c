@@ -3,8 +3,6 @@
 ADC_HandleTypeDef    AdcHandle;
 
 bool JOYSTICK_init(){
-
-
     ADC_ChannelConfTypeDef sConfig;
 
     /*##-1- Configure the ADC peripheral #######################################*/
@@ -41,13 +39,12 @@ bool JOYSTICK_init(){
         return false;
     }
     return true;
-
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
     /* Turn LED3 on: Transfer process is correct */
-    BSP_LED_On(LED3);
+    
 }
 
 void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)

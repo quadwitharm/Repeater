@@ -9,6 +9,7 @@
 #include "stm32f4xx_hal.h"
 
 void UART_init(uint32_t BaudRate);
+void UART_send(uint8_t *buf,int len);
 void setTransfer();
 void USARTx_IRQHandler(void);
 
