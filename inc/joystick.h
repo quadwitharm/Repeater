@@ -12,6 +12,7 @@
 
 extern ADC_HandleTypeDef    AdcHandle;
 bool JOYSTICK_init();
+void ADC_SwitchChannel(int channel);
 
 /* Definition for ADCx clock resources */
 #define ADCx                            ADC3
@@ -23,19 +24,14 @@ bool JOYSTICK_init();
 #define ADCx_RELEASE_RESET()            __ADC_RELEASE_RESET()
 
 /* Definition for ADCx Channel Pin */
-#define ADCx_CHANNEL_PIN                GPIO_PIN_10
+#define ADCx_CHANNEL_PIN_1                GPIO_PIN_10
+#define ADCx_CHANNEL_PIN_2                GPIO_PIN_9
 #define ADCx_CHANNEL_GPIO_PORT          GPIOF
 
 /* Definition for ADCx's Channel */
-#define ADCx_CHANNEL                    ADC_CHANNEL_8
-
-/* Definition for ADCx's DMA */
-#define ADCx_DMA_CHANNEL                DMA_CHANNEL_2
-#define ADCx_DMA_STREAM                 DMA2_Stream0
-
-/* Definition for ADCx's NVIC */
-#define ADCx_DMA_IRQn                   DMA2_Stream0_IRQn
-#define ADCx_DMA_IRQHandler             DMA2_Stream0_IRQHandler
+#define ADCx_CHANNEL_1                    ADC_CHANNEL_8
+/* Definition for ADCx's Channel */
+#define ADCx_CHANNEL_2                    ADC_CHANNEL_7
 
 #ifdef __cplusplus
 }
