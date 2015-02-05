@@ -12,7 +12,7 @@
 
 extern ADC_HandleTypeDef    AdcHandle;
 bool JOYSTICK_init();
-void ADC_SwitchChannel(int channel);
+void JoystickReadTask();
 
 /* Definition for ADCx clock resources */
 #define ADCx                            ADC3
@@ -24,14 +24,19 @@ void ADC_SwitchChannel(int channel);
 #define ADCx_RELEASE_RESET()            __ADC_RELEASE_RESET()
 
 /* Definition for ADCx Channel Pin */
-#define ADCx_CHANNEL_PIN_1                GPIO_PIN_10
-#define ADCx_CHANNEL_PIN_2                GPIO_PIN_9
+#define ADCx_CHANNEL_PIN_1              GPIO_PIN_7
+#define ADCx_CHANNEL_PIN_2              GPIO_PIN_8
+#define ADCx_CHANNEL_PIN_3              GPIO_PIN_9
+#define ADCx_CHANNEL_PIN_4              GPIO_PIN_10
 #define ADCx_CHANNEL_GPIO_PORT          GPIOF
 
 /* Definition for ADCx's Channel */
-#define ADCx_CHANNEL_1                    ADC_CHANNEL_8
-/* Definition for ADCx's Channel */
-#define ADCx_CHANNEL_2                    ADC_CHANNEL_7
+#define ADCx_CHANNEL_1                  ADC_CHANNEL_5
+#define ADCx_CHANNEL_2                  ADC_CHANNEL_6
+#define ADCx_CHANNEL_3                  ADC_CHANNEL_7
+#define ADCx_CHANNEL_4                  ADC_CHANNEL_8
+
+#define ADCx_CHANNEL_COUNT              4
 
 #ifdef __cplusplus
 }
