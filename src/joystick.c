@@ -53,32 +53,51 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle) {
     /* Currently use polling I/O, nothing to do */
 }
 
-#define X_MID_VALUE 1291
-#define Y_MID_VALUE 2037
+/* TODO: dynamically estimate the middle value */
+#define ROLL_MID_VALUE 1291
+#define PITCH_MID_VALUE 2037
+#define YAW_MID_VALUE 2037
+#define ZSPEED_MID_VALUE 2037
 #define ADC_MAX_VALUE 4095
 #define ADC_MIN_VALUE 0
 #define ROLL_MAX 20
 #define PITCH_MAX 20
+#define YAW_SPEED_FACTOR 100    // TODO: Test with hardware
+#define ZSPEED_FACTOR 100
 #define CENTER_AREA 0.03
+#define SCALE_ADC_INPUT(IN, MID) \
+   (IN > MID) ? \
+       (float)(IN - MID) / (ADC_MAX_VALUE - MID) : \
+       (float)(IN - MID) / (MID - ADC_MIN_VALUE)
+#define FILTER_CENTER_AREA(value) \
+    ((value > 0 ? value : -value) < CENTER_AREA) ? 0 : value
 
 void JoystickRead_Task(){
+    float yaw = 0, zSpeed = 0;
     while(1){
-        uint16_t X = ADC_ConversionPolling(0);
-        uint16_t Y = ADC_ConversionPolling(1);
+        uint16_t RollIn = ADC_ConversionPolling(0);
+        uint16_t PitchIn= ADC_ConversionPolling(1);
+        uint16_t YawIn = ADC_ConversionPolling(2);
+        uint16_t zSpeedIn  = ADC_ConversionPolling(3);
 
-        float x = (X > X_MID_VALUE) ?
-            (float)(X - X_MID_VALUE) / (ADC_MAX_VALUE - X_MID_VALUE) :
-            (float)(X - X_MID_VALUE) / (X_MID_VALUE - ADC_MIN_VALUE);
+        /* Setpoint of roll, pitch */
+        float roll = SCALE_ADC_INPUT(RollIn, ROLL_MID_VALUE);
+        float pitch = SCALE_ADC_INPUT(PitchIn, PITCH_MID_VALUE);
 
-        float y = (Y > Y_MID_VALUE) ?
-            (float)(Y - Y_MID_VALUE) / (ADC_MAX_VALUE - Y_MID_VALUE) :
-            (float)(Y - Y_MID_VALUE) / (Y_MID_VALUE - ADC_MIN_VALUE);
+        float yawDelta = SCALE_ADC_INPUT(YawIn, YAW_MID_VALUE);
+        float zSpeedDelta = SCALE_ADC_INPUT(zSpeedIn, ZSPEED_MID_VALUE);
 
-        x = ((x > 0 ? x : -x) < CENTER_AREA) ? 0 : x;
-        y = ((y > 0 ? y : -y) < CENTER_AREA) ? 0 : y;
+        /* Center don't care zone */
+        roll  = FILTER_CENTER_AREA(roll);
+        pitch  = FILTER_CENTER_AREA(pitch);
+        yawDelta = FILTER_CENTER_AREA(yawDelta);
+        zSpeedDelta = FILTER_CENTER_AREA(zSpeedDelta);
+
+        yaw += yawDelta * YAW_SPEED_FACTOR;
+        zSpeed += zSpeedDelta * ZSPEED_FACTOR;
 
         // Temporary use gyro plot canvas to see the output
-        float g[3] = { 0, x * ROLL_MAX, y * PITCH_MAX};
+        float g[3] = { 0, roll * ROLL_MAX, pitch * PITCH_MAX};
         SendCommand_3( 0x01 , 0x00, (uint8_t *)g, 12);
     }
 }
