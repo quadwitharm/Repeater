@@ -12,7 +12,7 @@
 
 extern ADC_HandleTypeDef    AdcHandle;
 bool JOYSTICK_init();
-void JoystickReadTask();
+void JoystickRead_Task();
 
 /* Definition for ADCx clock resources */
 #define ADCx                            ADC3

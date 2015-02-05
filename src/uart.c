@@ -1,11 +1,14 @@
 #include <stdbool.h>
 #include "uart.h"
+#include "clib.h"
+#include "task.h"
 
 UART_HandleTypeDef UartHandle1;
 UART_HandleTypeDef UartHandle2;
 
-uint8_t buffer1[1];
-uint8_t buffer2[1];
+uint8_t buffer1[64]; /* A size enough to all command */
+uint8_t buffer2[64]; /* A size enough to all command */
+uint8_t *pbuf1 = buffer1, *pbuf2 = buffer2;
 
 void UART_init( uint32_t BaudRate){
     UartHandle1 = (UART_HandleTypeDef) {
@@ -38,8 +41,8 @@ void UART_send(uint8_t *buf,int len){
 }
 
 void setTransfer(){
-    HAL_UART_Receive_IT(&UartHandle2, buffer2, 1);
-    HAL_UART_Receive_IT(&UartHandle1, buffer1, 1);
+    HAL_UART_Receive_IT(&UartHandle2, pbuf1++, 1);
+    HAL_UART_Receive_IT(&UartHandle1, pbuf2++, 1);
 }
 
 /**
@@ -49,11 +52,19 @@ void setTransfer(){
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle){
     if(UartHandle->Instance == USART1){
-        HAL_UART_Transmit_IT(&UartHandle2,buffer1,1); /* Forward to UART3 */
-        HAL_UART_Receive_IT(&UartHandle1, buffer1, 1); /* Listen to next byte */
+        HAL_UART_Receive_IT(&UartHandle1, pbuf1++, 1); /* Listen to next byte */
+        if(*(pbuf1-1) == 0x86){
+            taskENTER_CRITICAL();
+            HAL_UART_Transmit_IT(&UartHandle2,buffer1, pbuf1 - buffer1); /* Forward to UART3 */
+            taskEXIT_CRITICAL();
+        }
     }else if(UartHandle->Instance == USART3){
-        HAL_UART_Transmit_IT(&UartHandle1,buffer2,1); /* Forward to UART1 */
-        HAL_UART_Receive_IT(&UartHandle2, buffer2, 1); /* Listen to next byte */
+        HAL_UART_Receive_IT(&UartHandle2, pbuf2++, 1); /* Listen to next byte */
+        if(*(pbuf1-1) == 0x86){
+            taskENTER_CRITICAL();
+            HAL_UART_Transmit_IT(&UartHandle1,buffer2, pbuf2 - buffer2); /* Forward to UART1 */
+            taskEXIT_CRITICAL();
+        }
     }
 }
 
@@ -63,12 +74,13 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle){
     uint8_t tmp = UartHandle->Instance->DR;
     /* Same as RxCpltCallBack */
     if(UartHandle->Instance == USART1){
-        HAL_UART_Transmit_IT(&UartHandle2,&tmp,1);
-        HAL_UART_Receive_IT(&UartHandle1,buffer1, 1);
+        *pbuf1 = tmp;
     }else if(UartHandle->Instance == USART3){
-        HAL_UART_Transmit_IT(&UartHandle1,&tmp,1);
-        HAL_UART_Receive_IT(&UartHandle2,buffer2, 1);
+        *pbuf2 = tmp;
     }
+    /* Listen to next byte, if a command is fully received,
+     * forward to another port */
+    HAL_UART_RxCpltCallback(UartHandle);
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart){

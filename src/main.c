@@ -1,6 +1,7 @@
 #include "stm32f4xx_hal.h"
 #include "uart.h"
 #include "joystick.h"
+#include "task.h"
 
 int main(void){
     HAL_Init();
@@ -11,5 +12,12 @@ int main(void){
 
     kputs("Uart Test\r\n");
 
-    JoystickReadTask();
+    xTaskCreate(JoystickRead_Task,
+            (portCHAR *)"Joystick Task",
+            256,
+            NULL,
+            tskIDLE_PRIORITY + 1,
+            NULL);
+
+    vTaskStartScheduler();
 }

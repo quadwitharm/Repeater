@@ -61,7 +61,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle) {
 #define PITCH_MAX 20
 #define CENTER_AREA 0.03
 
-void JoystickReadTask(){
+void JoystickRead_Task(){
     while(1){
         uint16_t X = ADC_ConversionPolling(0);
         uint16_t Y = ADC_ConversionPolling(1);
