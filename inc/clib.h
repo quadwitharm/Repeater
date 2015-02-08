@@ -16,11 +16,11 @@
 
 void assert_failed(uint8_t* file, uint32_t line);
 
-void kputs(const char *);
-void kputc(char);
+void kputs(int to, const char *);
+void kputc(int to, char);
 void kgets(char buf[],int len);
 char kgetc();
-int kprintf(const char *format, ...);
+int kprintf(int to, const char *format, ...);
 
 /*
  * Followig function uses library implementation

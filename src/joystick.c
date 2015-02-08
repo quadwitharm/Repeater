@@ -54,8 +54,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle) {
 }
 
 /* TODO: dynamically estimate the middle value */
-#define ROLL_MID_VALUE 1291
-#define PITCH_MID_VALUE 2037
+#define ROLL_MID_VALUE 1978
+#define PITCH_MID_VALUE 2035
 #define YAW_MID_VALUE 2037
 #define ZSPEED_MID_VALUE 2037
 #define ADC_MAX_VALUE 4095
@@ -72,7 +72,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle) {
 #define FILTER_CENTER_AREA(value) \
     ((value > 0 ? value : -value) < CENTER_AREA) ? 0 : value
 
-void JoystickRead_Task(){
+void JoystickRead_Task(void *args){
     float yaw = 0, zSpeed = 0;
     while(1){
         uint16_t RollIn = ADC_ConversionPolling(0);
@@ -96,9 +96,12 @@ void JoystickRead_Task(){
         yaw += yawDelta * YAW_SPEED_FACTOR;
         zSpeed += zSpeedDelta * ZSPEED_FACTOR;
 
+        if(yaw >  180)yaw -= 360;
+        if(yaw < -180)yaw += 360;
+
         // Temporary use gyro plot canvas to see the output
-        float g[3] = { 0, roll * ROLL_MAX, pitch * PITCH_MAX};
-        SendCommand_3( 0x01 , 0x00, (uint8_t *)g, 12);
+        float g[3] = { roll * ROLL_MAX, pitch * PITCH_MAX, yaw};
+        SendCommand_3( SEND_DIST_FLIGHT, 0x05 , 0x00, (uint8_t *)g, 12);
     }
 }
 

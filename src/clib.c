@@ -16,13 +16,13 @@ void assert_failed(uint8_t* file, uint32_t line){
 }
 #endif
 
-void kputs(const char *str){
+void kputs(int to, const char *str){
     const uint8_t head = 0x03;
-    SendCommand_2(head, (uint8_t *)str, strlen(str));
+    SendCommand_2(to, head, (uint8_t *)str, strlen(str));
 }
-void kputc(const char c){
+void kputc(int to, const char c){
     const uint8_t head = 0x03;
-    SendCommand_2(head, (uint8_t *)&c, 1);
+    SendCommand_2(to, head, (uint8_t *)&c, 1);
 }
 
 void kgets(char buf[],int len){
@@ -41,12 +41,12 @@ char kgetc(){
     UART_recv((uint8_t *)&msg,1);
     return msg;
 }
-int kprintf(const char *format, ...){
+int kprintf(int to, const char *format, ...){
     char outbuf[64];
     va_list args;
     va_start(args,format);
     int ret = vsnprintf(outbuf,128,format,args);
-    kputs(outbuf);
+    kputs(to, outbuf);
     va_end(args);
     return ret;
 }

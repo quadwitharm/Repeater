@@ -10,8 +10,8 @@ int main(void){
     JOYSTICK_init();
     setTransfer();
 
-    kputs("Uart Test\r\n");
-
+    kputs(SEND_DIST_CONSOLE, "Uart Test\r\n");
+    JoystickRead_Task();
     xTaskCreate(JoystickRead_Task,
             (portCHAR *)"Joystick Task",
             256,
@@ -21,3 +21,4 @@ int main(void){
 
     vTaskStartScheduler();
 }
+

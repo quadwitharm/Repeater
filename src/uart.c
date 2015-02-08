@@ -35,9 +35,10 @@ void UART_init( uint32_t BaudRate){
     HAL_UART_Init(&UartHandle2);
 }
 
-void UART_send(uint8_t *buf,int len){
+void UART_send(int to,uint8_t *buf,int len){
+    UART_HandleTypeDef *Handle = (to == 1) ? &UartHandle1 : &UartHandle2;
     while(len--)
-        HAL_UART_Transmit(&UartHandle1, buf++, 1, 10000);
+        HAL_UART_Transmit(Handle, buf++, 1, 10000);
 }
 
 void setTransfer(){
